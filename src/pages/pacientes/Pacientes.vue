@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-md q-gutter-sm" style="position: relative">
-    <TabelaLink
+    <Tabela
       :dados="data"
       titulo="Pacientes"
       :coluna="coluna"
@@ -9,12 +9,11 @@
     />
     <div style="display: flex; justify-content: flex-end" class="q-pa-md">
       <q-btn
-        style="margin: 0 5px"
-        label="Voltar"
-        color="primary"
-        @click="redirectToNewPage"
+        label="Cadastrar Paciente"
+        style="background-color: #348ab3"
+        text-color="white"
+        @click="redirectToCreate"
       />
-      <q-btn label="Novo paciente" color="primary" @click="redirectToCreate" />
     </div>
     <div
       v-if="isLoading"
@@ -23,19 +22,20 @@
         height: 50vh;
         position: absolute;
         top: 0;
-        z-index: 99999999;
+        z-index: 1;
         display: flex;
         justify-content: center;
         align-items: center;
+        background: #fff;
       "
     >
-      <q-spinner-hourglass color="purple" size="4em" />
+      <q-spinner-tail style="color: #348ab3" size="4em" />
     </div>
   </div>
 </template>
 
 <script>
-import TabelaLink from "components/TabelaLink.vue";
+import Tabela from "src/components/TabelaComponent.vue";
 import { defineComponent } from "vue";
 
 const columns = [
@@ -44,22 +44,28 @@ const columns = [
     required: true,
     label: "Nome",
     align: "left",
-    field: (row) => row.name,
-    format: (val) => `${val}`,
+    field: "name",
     sortable: true,
   },
   {
     name: "data",
-    align: "center",
     label: "Data de Nascimento",
+    align: "left",
     field: "data",
     sortable: true,
   },
-  { name: "telefone", label: "Nº Telefone", field: "telefone", sortable: true },
+  {
+    name: "telefone",
+    label: "Nº Telefone",
+    field: "telefone",
+    align: "left",
+    sortable: true,
+  },
   {
     name: "acoes",
-    label: "Ações",
+    label: "",
     field: "acoes",
+    align: "left",
     sortable: false,
     align: "center",
   },
@@ -68,7 +74,7 @@ const columns = [
 export default defineComponent({
   name: "PaciEntes",
   components: {
-    TabelaLink,
+    Tabela,
   },
   data() {
     return {
@@ -81,9 +87,6 @@ export default defineComponent({
     this.fetchData();
   },
   methods: {
-    redirectToNewPage() {
-      this.$router.push("/");
-    },
     redirectToCreate() {
       this.$router.push("/pacientes/create");
     },
@@ -97,12 +100,14 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.delete(`pacientes/${id}`, token).then((response) => {
-        this.fetchData();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      this.$api
+        .delete(`pacientes/${id}`, token)
+        .then(() => {
+          this.fetchData();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     },
     fetchData() {
       let token = {
@@ -110,26 +115,28 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.get(`pacientes`, token).then((response) => {
-        const newData = response.data.map((value) => {
-          return {
-            name: value.pac_nome,
-            data: value.pac_dataNascimento,
-            telefone: value.pac_telefone,
-            id: value.id,
-          };
-        });
+      this.$api
+        .get(`pacientes`, token)
+        .then((response) => {
+          const newData = response.data.map((value) => {
+            return {
+              name: value.pac_nome,
+              data: value.pac_dt_nascimento,
+              telefone: value.pac_telefone,
+              id: value.id,
+            };
+          });
 
-        this.data = newData;
-        this.isLoading = false
-      })
-      .catch((error) => {
-        if (error.response.status) {
-          localStorage.clear("token");
-          this.$router.push("/");
-        }
-        console.error(error);
-      });
+          this.data = newData;
+          this.isLoading = false;
+        })
+        .catch((error) => {
+          if (error.response.status) {
+            localStorage.clear("token");
+            this.$router.push("/");
+          }
+          console.error(error);
+        });
     },
   },
 });

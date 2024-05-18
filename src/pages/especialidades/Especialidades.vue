@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-md q-gutter-sm" style="position: relative">
-    <TabelaLink
+    <Tabela
       :dados="data"
       titulo="Especialidades"
       :coluna="coluna"
@@ -9,14 +9,9 @@
     />
     <div style="display: flex; justify-content: flex-end" class="q-pa-md">
       <q-btn
-        style="margin: 0 5px"
-        label="Voltar"
-        color="primary"
-        @click="redirectToNewPage"
-      />
-      <q-btn
-        label="Nova especialidade"
-        color="primary"
+        label="Cadastrar Especialidade"
+        style="background-color: #348ab3"
+        text-color="white"
         @click="redirectToCreate"
       />
     </div>
@@ -27,20 +22,21 @@
         height: 50vh;
         position: absolute;
         top: 0;
-        z-index: 99999999;
+        z-index: 1;
         display: flex;
         justify-content: center;
         align-items: center;
+        background: #fff;
       "
     >
-      <q-spinner-hourglass color="purple" size="4em" />
+      <q-spinner-tail style="color: #348ab3" size="4em" />
     </div>
   </div>
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import TabelaLink from "components/TabelaLink.vue";
+import Tabela from "src/components/TabelaComponent.vue";
 
 const columns = [
   {
@@ -48,13 +44,12 @@ const columns = [
     required: true,
     label: "Nome",
     align: "left",
-    field: (row) => row.name,
-    format: (val) => `${val}`,
+    field: "name",
     sortable: true,
   },
   {
     name: "acoes",
-    label: "Ações",
+    label: "",
     field: "acoes",
     sortable: false,
     align: "center",
@@ -64,7 +59,7 @@ const columns = [
 export default defineComponent({
   name: "especialidadeS",
   components: {
-    TabelaLink,
+    Tabela,
   },
   props: {},
   data() {
@@ -78,10 +73,6 @@ export default defineComponent({
     this.fetchData();
   },
   methods: {
-    redirectToNewPage() {
-      console.log("Clicou no link");
-      this.$router.push("/");
-    },
     redirectToCreate() {
       this.$router.push("/especialidades/create");
     },
@@ -95,12 +86,14 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.delete(`especialidades/${id}`, token).then((response) => {
-        this.fetchData();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      this.$api
+        .delete(`especialidades/${id}`, token)
+        .then((response) => {
+          this.fetchData();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     },
     fetchData() {
       let token = {
@@ -108,25 +101,26 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.get('especialidades/listar', token).then((response) => {
+      this.$api
+        .get("especialidades", token)
+        .then((response) => {
+          const newData = response.data.map((value) => {
+            return {
+              name: value.espec_nome,
+              id: value.id,
+            };
+          });
 
-        const newData = response.data.map((value) => {
-          return {
-            name: value.espec_nome,
-            id: value.id,
-          };
+          this.data = newData;
+          this.isLoading = false;
+        })
+        .catch((error) => {
+          if (error.response.status) {
+            localStorage.clear("token");
+            this.$router.push("/");
+          }
+          console.error(error);
         });
-
-        this.data = newData;
-        this.isLoading = false
-      })
-      .catch((error) => {
-        if (error.response.status) {
-          localStorage.clear("token");
-          this.$router.push("/");
-        }
-        console.error(error);
-      });
     },
   },
 });

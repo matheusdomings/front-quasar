@@ -12,11 +12,6 @@ const routes = [
     beforeEnter: authGuard,
     children: [
       {
-        path: "/bemvindo",
-        component: () => import("pages/IndexPage.vue"),
-        beforeEnter: authGuard,
-      },
-      {
         path: "/medicos",
         component: () => import("src/pages/medicos/Medicos.vue"),
         beforeEnter: authGuard,

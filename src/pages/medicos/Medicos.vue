@@ -1,6 +1,6 @@
 <template>
-  <div class="q-pa-md q-gutter-sm" style="position: relative">
-    <TabelaLink
+  <div class="q-pa-md" style="position: relative">
+    <Tabela
       :dados="data"
       titulo="Médicos"
       :coluna="coluna"
@@ -9,12 +9,11 @@
     />
     <div style="display: flex; justify-content: flex-end" class="q-pa-md">
       <q-btn
-        style="margin: 0 5px"
-        label="Voltar"
-        color="primary"
-        @click="redirectToNewPage"
+        label="Cadastrar Médico"
+        style="background-color: #348ab3"
+        text-color="white"
+        @click="redirectToCreate"
       />
-      <q-btn label="Novo médico" color="primary" @click="redirectToCreate" />
     </div>
     <div
       v-if="isLoading"
@@ -23,51 +22,58 @@
         height: 50vh;
         position: absolute;
         top: 0;
-        z-index: 99999999;
+        z-index: 1;
         display: flex;
         justify-content: center;
         align-items: center;
+        background: #fff;
       "
     >
-      <q-spinner-hourglass color="purple" size="4em" />
+      <q-spinner-tail style="color: #348ab3" size="4em" />
     </div>
   </div>
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import TabelaLink from "components/TabelaLink.vue";
+import Tabela from "src/components/TabelaComponent.vue";
 
 const columns = [
   {
-    name: "name",
+    name: "nome",
     required: true,
     label: "Nome",
+    field: "nome",
     align: "left",
-    field: (row) => row.name,
-    format: (val) => `${val}`,
     sortable: true,
   },
-  { name: "crm", align: "center", label: "CRM", field: "crm", sortable: true },
+  {
+    name: "crm",
+    label: "CRM",
+    field: "crm",
+    align: "left",
+    sortable: true,
+  },
   {
     name: "especialidade",
     label: "Especialidade",
     field: "especialidade",
+    align: "left",
     sortable: true,
   },
   {
     name: "acoes",
-    label: "Ações",
+    label: "",
     field: "acoes",
-    sortable: false,
     align: "center",
+    sortable: false,
   },
 ];
 
 export default defineComponent({
   name: "MediCos",
   components: {
-    TabelaLink,
+    Tabela,
   },
   props: {},
   data() {
@@ -81,10 +87,6 @@ export default defineComponent({
     this.fetchData();
   },
   methods: {
-    redirectToNewPage() {
-      console.log("Clicou no link");
-      this.$router.push("/");
-    },
     redirectToCreate() {
       this.$router.push("/medicos/create");
     },
@@ -98,12 +100,14 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.delete(`medicos/${id}`, token).then((response) => {
-        this.fetchData();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      this.$api
+        .delete(`medicos/${id}`, token)
+        .then(() => {
+          this.fetchData();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     },
     fetchData() {
       let token = {
@@ -111,12 +115,12 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.get('medicos/listar', token)
+      this.$api
+        .get("medicos", token)
         .then((response) => {
-
           const newData = response.data.map((value) => {
             return {
-              name: value.med_nome,
+              nome: value.med_nome,
               crm: value.med_crm,
               especialidade: value.especialidade.espec_nome,
               id: value.id,

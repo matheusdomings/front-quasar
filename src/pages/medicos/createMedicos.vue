@@ -1,8 +1,20 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-gutter-md row items-start">
-      <q-input v-model="nome" filled type="text" hint="Nome" />
-      <q-input v-model="crm" filled type="text" hint="CRM" />
+    <div class="q-gutter-md column items-start">
+      <q-input
+        v-model="nome"
+        filled
+        type="text"
+        hint="NOME"
+        class="q-pa-md full-width"
+      />
+      <q-input
+        v-model="crm"
+        filled
+        type="text"
+        hint="CRM"
+        class="q-pa-md full-width"
+      />
       <q-select
         filled
         v-model="especialidade"
@@ -12,23 +24,27 @@
         option-disable="inactive"
         emit-value
         map-options
-        hint="Especialidades"
-        style="min-width: 250px; max-width: 300px"
+        hint="ESPECIALIDADE"
+        class="q-pa-md full-width"
         :loading="isLoading"
       />
     </div>
-    <div class="q-pa-md q-gutter-sm">
-      <div style="display: flex; justify-content: flex-end" class="q-pa-md">
+    <div class="q-pt-md">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 15px"
+        class="q-pa-md"
+      >
         <q-btn
-          style="margin: 0 5px"
           label="Voltar"
-          color="primary"
+          color="white"
+          text-color="black"
           @click="voltar"
           :disabled="isLoadingEnviar"
         />
         <q-btn
-          :label="botaoLabel"
-          color="primary"
+          label="Finalizar Cadastro"
+          style="background-color: #348ab3"
+          text-color="white"
           @click="criarMedico"
           :disabled="isLoadingEnviar"
         />
@@ -38,13 +54,13 @@
   <q-dialog v-model="icon">
     <q-card>
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">{{ retornoTitulo }}</div>
+        <div class="text-h6">Informações pendentes</div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
       <q-card-section>
-        {{ retorno }}
+        Preencha todos os campos para prosseguir
       </q-card-section>
     </q-card>
   </q-dialog>
@@ -53,8 +69,6 @@
 <script>
 import { defineComponent } from "vue";
 import { ref } from "vue";
-import axios from "axios";
-import { url } from "src/urlApi";
 
 export default defineComponent({
   name: "createMedicos",
@@ -63,9 +77,6 @@ export default defineComponent({
       data: null,
       isLoading: false,
       isLoadingEnviar: false,
-      retorno: "Todo os campos precisam ser preenchidos.",
-      retornoTitulo: "Dados faltando.",
-      botaoLabel: "Criar",
     };
   },
   mounted() {
@@ -82,8 +93,9 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      this.$api.get('especialidades/listar', token).then((response) => {
-
+      this.$api
+        .get("especialidades", token)
+        .then((response) => {
           const newData = response.data.map((value) => {
             return {
               id: value.id,
@@ -103,15 +115,23 @@ export default defineComponent({
     criarMedico() {
       this.isLoadingEnviar = true;
       this.botaoLabel = "Carregando ...";
-      console.log(this.especialidade)
       if (this.especialidade != "" && this.nome != "" && this.crm != "") {
         let token = {
           headers: {
             Authorization: `Bearer ${window.localStorage.getItem("token")}`,
           },
         };
-        this.$api.post('medicos', { med_nome: this.nome, med_crm: this.crm, med_espec: this.especialidade }, token)
-          .then((response) => {
+        this.$api
+          .post(
+            "medicos",
+            {
+              med_nome: this.nome,
+              med_crm: this.crm,
+              med_espec: this.especialidade,
+            },
+            token
+          )
+          .then(() => {
             this.isLoadingEnviar = false;
             this.$router.push("/medicos");
           })
@@ -137,7 +157,7 @@ export default defineComponent({
       nome: ref(""),
       crm: ref(""),
       icon: ref(false),
-      especialidade: ref(''),
+      especialidade: ref(""),
     };
   },
 });

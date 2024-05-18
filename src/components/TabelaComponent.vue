@@ -1,6 +1,8 @@
 <template>
   <div class="q-pa-md">
     <q-table
+      flat
+      bordered
       :title="titulo"
       :rows="linhas"
       :columns="coluna"
@@ -8,21 +10,38 @@
       :loading="isLoading"
     >
       <template v-slot:body-cell-acoes="props">
-        <td class="text-center">
-          <q-icon name="edit" @click="redirecionarRota(props.row.id)" style="cursor: pointer; font-size: larger; margin: 0 2px;" />
-          <q-icon name="delete" @click="fazerRequisicao(props.row.id)" style="cursor: pointer; font-size: larger; margin: 0 2px;" :label="labelDinamic" />
+        <td
+          class="text-center"
+          style="
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <q-icon
+            name="edit"
+            @click="redirecionarRota(props.row.id)"
+            style="cursor: pointer; font-size: larger"
+            color="dark"
+          />
+          <q-icon
+            name="delete"
+            @click="fazerRequisicao(props.row.id)"
+            style="cursor: pointer; font-size: larger"
+            color="red"
+          />
         </td>
       </template>
     </q-table>
   </div>
 </template>
 
-
 <script>
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "TabelaLink",
+  name: "TabelaComponent",
   props: {
     dados: Object,
     coluna: Object,
@@ -35,7 +54,6 @@ export default defineComponent({
   data() {
     return {
       isLoading: false,
-      labelDinamic: "Deletar",
     };
   },
   methods: {
@@ -64,3 +82,25 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+.q-table__title {
+  color: #348ab3;
+  border-radius: 5px;
+}
+.q-table__top,
+.q-table__bottom,
+thead tr:first-child th {
+  background-color: #f9f9f9;
+}
+thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+thead tr:first-child th {
+  top: 0;
+}
+tbody {
+  scroll-margin-top: 48px;
+}
+</style>

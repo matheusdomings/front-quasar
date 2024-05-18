@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-md q-gutter-sm" style="position: relative">
-    <TabelaLink
+    <Tabela
       :dados="data"
       titulo="Consultas"
       :coluna="coluna"
@@ -9,12 +9,11 @@
     />
     <div style="display: flex; justify-content: flex-end" class="q-pa-md">
       <q-btn
-        style="margin: 0 5px"
-        label="Voltar"
-        color="primary"
-        @click="redirectToNewPage"
+        label="Marcar Consulta"
+        style="background-color: #348ab3"
+        text-color="white"
+        @click="redirectToCreate"
       />
-      <q-btn label="Nova consulta" color="primary" @click="redirectToCreate" />
     </div>
     <div
       v-if="isLoading"
@@ -23,30 +22,52 @@
         height: 50vh;
         position: absolute;
         top: 0;
-        z-index: 99999999;
+        z-index: 1;
         display: flex;
         justify-content: center;
         align-items: center;
+        background: #fff;
       "
     >
-      <q-spinner-hourglass color="purple" size="4em" />
+      <q-spinner-tail style="color: #348ab3" size="4em" />
     </div>
   </div>
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import ModalLink from "components/ModalLink.vue";
-import TabelaLink from "components/TabelaLink.vue";
-import axios from "axios";
-import { url } from "src/urlApi";
+import Tabela from "src/components/TabelaComponent.vue";
 
 const columns = [
+  {
+    name: "acoes",
+    label: "",
+    field: "acoes",
+    sortable: false,
+    align: "center",
+  },
+  {
+    name: "paciente",
+    align: "center",
+    label: "Paciente",
+    field: "paciente",
+    align: "left",
+    sortable: true,
+  },
   {
     name: "procedimento",
     align: "center",
     label: "Procedimento",
     field: "procedimento",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "medico",
+    align: "center",
+    label: "Médico",
+    field: "medico",
+    align: "left",
     sortable: true,
   },
   {
@@ -54,13 +75,15 @@ const columns = [
     align: "center",
     label: "Data",
     field: "data",
+    align: "left",
     sortable: true,
   },
   {
     name: "hora",
     align: "center",
-    label: "Hora",
+    label: "Horario",
     field: "hora",
+    align: "left",
     sortable: true,
   },
   {
@@ -68,49 +91,31 @@ const columns = [
     align: "center",
     label: "Particular",
     field: "particular",
-    sortable: true,
-  },
-  {
-    name: "medico",
-    align: "center",
-    label: "Medico",
-    field: "medico",
-    sortable: true,
-  },
-  {
-    name: "nr_contrato",
-    align: "center",
-    label: "Nr_contrato",
-    field: "nr_contrato",
+    align: "left",
     sortable: true,
   },
   {
     name: "plano",
     align: "center",
-    label: "Plano",
+    label: "Plano de Saúde",
     field: "plano",
+    align: "left",
     sortable: true,
   },
   {
-    name: "paciente",
+    name: "nr_contrato",
     align: "center",
-    label: "Paciente",
-    field: "paciente",
+    label: "Nº do Contrato",
+    field: "nr_contrato",
+    align: "left",
     sortable: true,
-  },
-  {
-    name: "acoes",
-    label: "Ações",
-    field: "acoes",
-    sortable: false,
-    align: "center",
   },
 ];
 
 export default defineComponent({
   name: "consultaS",
   components: {
-    TabelaLink,
+    Tabela,
   },
   props: {},
   data() {
@@ -124,10 +129,6 @@ export default defineComponent({
     this.fetchData();
   },
   methods: {
-    redirectToNewPage() {
-      console.log("Clicou no link");
-      this.$router.push("/");
-    },
     redirectToCreate() {
       this.$router.push("/consultas/create");
     },
@@ -141,9 +142,9 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      axios
-        .delete(`${url}api/consultas/${id}`, token)
-        .then((response) => {
+      this.$api
+        .delete(`consultas/${id}`, token)
+        .then(() => {
           this.fetchData();
         })
         .catch((error) => {
@@ -156,35 +157,29 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      axios
-        .post(
-          `${url}api/consultas/listar`,
-          {
-            registro_por_pagina: 10,
-          },
-          token
-        )
+      this.$api
+        .get(`consultas`, token)
         .then((response) => {
-          // Atualize o estado de `data` com os dados da resposta
-
-          const newData = response.data.data.map((value) => {
+          const newData = response.data.map((value) => {
             return {
               data: value.data,
               hora: value.hora,
-              particular: value.particular == "1" ? "sim" : "não",
+              particular: value.particular == "1" ? "S" : "N",
               medico: value.medico.med_nome,
               nr_contrato: value.vinculo ? value.vinculo.nr_contrato : "",
               plano: value.vinculo
                 ? value.vinculo.plano_saude.plano_descricao
                 : "",
               paciente: value.paciente.pac_nome,
-              procedimento: value.procedimento[0].proc_nome,
-              id: value.cons_codigo,
+              procedimento: value.procedimento[0]
+                ? value.procedimento[0].proc_nome
+                : "#",
+              id: value.id,
             };
           });
 
           this.data = newData;
-          this.isLoading = false
+          this.isLoading = false;
         })
         .catch((error) => {
           if (error.response.status) {

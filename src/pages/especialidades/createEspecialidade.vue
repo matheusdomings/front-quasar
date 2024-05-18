@@ -1,20 +1,30 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-gutter-md row items-start">
-      <q-input v-model="nome" filled type="text" hint="Nome" />
+    <div class="q-gutter-md column items-start">
+      <q-input
+        v-model="nome"
+        filled
+        type="text"
+        hint="NOME"
+        class="full-width q-pa-md"
+      />
     </div>
     <div class="q-pa-md q-gutter-sm">
-      <div style="display: flex; justify-content: flex-end" class="q-pa-md">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 15px"
+        class="q-pt-md"
+      >
         <q-btn
-          style="margin: 0 5px"
           label="Voltar"
-          color="primary"
+          color="white"
+          text-color="black"
           @click="voltar"
           :disabled="isLoadingEnviar"
         />
         <q-btn
-          :label="botaoLabel"
-          color="primary"
+          label="Finalizar Cadastro"
+          style="background-color: #348ab3"
+          text-color="white"
           @click="criarEspecialidade"
           :disabled="isLoadingEnviar"
         />
@@ -47,9 +57,6 @@ export default defineComponent({
       data: null,
       isLoading: false,
       isLoadingEnviar: false,
-      retorno: "Todo os campos precisam ser preenchidos.",
-      retornoTitulo: "Dados faltando.",
-      botaoLabel: "Criar",
     };
   },
   mounted() {},
@@ -66,20 +73,22 @@ export default defineComponent({
             Authorization: `Bearer ${window.localStorage.getItem("token")}`,
           },
         };
-        this.$api.post('especialidades', { espec_nome: this.nome }, token).then((response) => {
-          this.isLoadingEnviar = false;
-          this.$router.push("/especialidades");
-        })
-        .catch((error) => {
-          if (error.response.status == 422) {
-            this.retornoTitulo = "Erro";
-            this.retorno = "Esse nome de especialidade já existe";
-            this.icon = true;
-          }
-          this.isLoadingEnviar = false;
-          this.botaoLabel = "Criar";
-          console.error(error);
-        });
+        this.$api
+          .post("especialidades", { espec_nome: this.nome }, token)
+          .then((response) => {
+            this.isLoadingEnviar = false;
+            this.$router.push("/especialidades");
+          })
+          .catch((error) => {
+            if (error.response.status == 422) {
+              this.retornoTitulo = "Erro";
+              this.retorno = "Esse nome de especialidade já existe";
+              this.icon = true;
+            }
+            this.isLoadingEnviar = false;
+            this.botaoLabel = "Criar";
+            console.error(error);
+          });
       } else {
         this.botaoLabel = "Criar";
         this.isLoadingEnviar = false;

@@ -1,20 +1,19 @@
 <template>
   <div class="q-pa-md q-gutter-sm" style="position: relative">
-    <TabelaLink
+    <Tabela
       :dados="data"
-      titulo="Planos de saúde"
+      titulo="Planos de Saúde"
       :coluna="coluna"
       @enviar-funcao="deletar"
       @enviar-edit="redirectEditar"
     />
     <div style="display: flex; justify-content: flex-end" class="q-pa-md">
       <q-btn
-        style="margin: 0 5px"
-        label="Voltar"
-        color="primary"
-        @click="redirectToNewPage"
+        label="Cadastrar Plano"
+        style="background-color: #348ab3"
+        text-color="white"
+        @click="redirectToCreate"
       />
-      <q-btn label="Novo plano" color="primary" @click="redirectToCreate" />
     </div>
     <div
       v-if="isLoading"
@@ -23,23 +22,21 @@
         height: 50vh;
         position: absolute;
         top: 0;
-        z-index: 99999999;
+        z-index: 1;
         display: flex;
         justify-content: center;
         align-items: center;
+        background: #fff;
       "
     >
-      <q-spinner-hourglass color="purple" size="4em" />
+      <q-spinner-tail style="color: #348ab3" size="4em" />
     </div>
   </div>
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import ModalLink from "components/ModalLink.vue";
-import TabelaLink from "components/TabelaLink.vue";
-import axios from "axios";
-import { url } from "src/urlApi";
+import Tabela from "src/components/TabelaComponent.vue";
 
 const columns = [
   {
@@ -47,20 +44,19 @@ const columns = [
     required: true,
     label: "Nome",
     align: "left",
-    field: (row) => row.name,
-    format: (val) => `${val}`,
+    field: "name",
     sortable: true,
   },
   {
     name: "telefone",
-    align: "center",
+    align: "left",
     label: "Telefone",
     field: "telefone",
     sortable: true,
   },
   {
     name: "acoes",
-    label: "Ações",
+    label: "",
     field: "acoes",
     sortable: false,
     align: "center",
@@ -70,7 +66,7 @@ const columns = [
 export default defineComponent({
   name: "PlanoS",
   components: {
-    TabelaLink,
+    Tabela,
   },
   props: {},
   data() {
@@ -84,10 +80,6 @@ export default defineComponent({
     this.fetchData();
   },
   methods: {
-    redirectToNewPage() {
-      console.log("Clicou no link");
-      this.$router.push("/");
-    },
     redirectToCreate() {
       this.$router.push("/planosSaude/create");
     },
@@ -101,9 +93,9 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      axios
-        .delete(`${url}api/planosaude/${id}`, token)
-        .then((response) => {
+      this.$api
+        .delete(`plano-saude/${id}`, token)
+        .then(() => {
           this.fetchData();
         })
         .catch((error) => {
@@ -116,34 +108,25 @@ export default defineComponent({
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      axios
-        .post(
-          `${url}api/planosaude/listar`,
-          {
-            registro_por_pagina: 10,
-          },
-          token
-        )
+      this.$api
+        .get(`plano-saude`, token)
         .then((response) => {
-          // Atualize o estado de `data` com os dados da resposta
-
-          const newData = response.data.data.map((value) => {
+          const newData = response.data.map((value) => {
             return {
               name: value.plano_descricao,
               telefone: value.plano_telefone,
-              id: value.plano_codigo,
+              id: value.id,
             };
           });
 
           this.data = newData;
-          this.isLoading = false
+          this.isLoading = false;
         })
         .catch((error) => {
           if (error.response.status) {
             localStorage.clear("token");
             this.$router.push("/");
           }
-          console.error(error);
         });
     },
   },

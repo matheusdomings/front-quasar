@@ -1,9 +1,9 @@
 {
-  "name": "front-ti-saude",
-  "version": "0.0.1",
+  "name": "front-quasar",
+  "version": "1.0.0",
   "description": "A Quasar Project",
   "productName": "Quasar App",
-  "author": "thiagotw10 <thiagotw10@hotmail.com>",
+  "author": "matheusdomings <mathenriquedomingos@gmail.com>",
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",

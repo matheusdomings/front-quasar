@@ -1,22 +1,38 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-gutter-md row items-start">
-      <q-input v-model="nome" filled type="text" hint="Nome" />
-      <q-input v-model="telefone" filled mask="(##)####-####" hint="Telefone" />
+    <div class="q-gutter-md column items-start">
+      <q-input
+        v-model="nome"
+        filled
+        type="text"
+        hint="NOME"
+        class="full-width q-pa-md"
+      />
+      <q-input
+        v-model="telefone"
+        filled
+        mask="(##) # ####-####"
+        hint="TELEFONE"
+        class="full-width q-pa-md"
+      />
     </div>
-    <div class="q-pa-md q-gutter-sm">
-      <div style="display: flex; justify-content: flex-end" class="q-pa-md">
+    <div class="q-pt-md">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 15px"
+        class="q-pa-md"
+      >
         <q-btn
-          style="margin: 0 5px"
           label="Voltar"
-          color="primary"
+          color="white"
+          text-color="black"
           @click="voltar"
           :disabled="isLoadingEnviar"
         />
         <q-btn
-          :label="botaoLabel"
-          color="primary"
-          @click="criarMedico"
+          label="Finalizar Cadastro"
+          style="background-color: #348ab3"
+          text-color="white"
+          @click="criarPlano"
           :disabled="isLoadingEnviar"
         />
       </div>
@@ -40,8 +56,6 @@
 <script>
 import { defineComponent } from "vue";
 import { ref } from "vue";
-import axios from "axios";
-import { url } from "src/urlApi";
 
 export default defineComponent({
   name: "createPlanos",
@@ -50,9 +64,6 @@ export default defineComponent({
       data: null,
       isLoading: false,
       isLoadingEnviar: false,
-      retorno: "Todo os campos precisam ser preenchidos.",
-      retornoTitulo: "Dados faltando.",
-      botaoLabel: "Criar",
     };
   },
   mounted() {},
@@ -60,7 +71,7 @@ export default defineComponent({
     voltar() {
       this.$router.push("/planosSaude");
     },
-    criarMedico() {
+    criarPlano() {
       this.isLoadingEnviar = true;
       this.botaoLabel = "Carregando ...";
       if (this.telefone != "" && this.nome != "") {
@@ -69,13 +80,10 @@ export default defineComponent({
             Authorization: `Bearer ${window.localStorage.getItem("token")}`,
           },
         };
-        axios
+        this.$api
           .post(
-            `${url}api/planosaude`,
-            {
-              plano_descricao: this.nome,
-              plano_telefone: this.telefone,
-            },
+            `plano-saude`,
+            { plano_descricao: this.nome, plano_telefone: this.telefone },
             token
           )
           .then((response) => {

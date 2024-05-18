@@ -1,13 +1,26 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-gutter-md row items-start">
-      <q-input v-model="nome" filled type="text" hint="Nome" />
-      <q-input v-model="telefone" filled mask="(##)####-####" hint="Telefone" />
+    <div class="q-gutter-md column items-start">
       <q-input
-        v-model="dataNascimento"
+        v-model="nome"
+        filled
+        type="text"
+        hint="NOME"
+        class="full-width q-pa-md"
+      />
+      <q-input
+        v-model="telefone"
+        filled
+        mask="(##) # ####-####"
+        hint="TELEFONE"
+        class="full-width q-pa-md"
+      />
+      <q-input
+        v-model="dt_nascimento"
         filled
         mask="##/##/####"
-        hint="Data de nascimento"
+        hint="DATA DE NASCIMENTO"
+        class="full-width q-pa-md"
       />
       <q-select
         filled
@@ -18,24 +31,28 @@
         option-disable="inactive"
         emit-value
         map-options
-        hint="Planos de saúde"
-        style="min-width: 250px; max-width: 300px"
+        hint="PLANO DE SAÚDE"
+        class="full-width q-pa-md"
         :loading="isLoading"
       />
     </div>
-    <div class="q-pa-md q-gutter-sm">
-      <div style="display: flex; justify-content: flex-end" class="q-pa-md">
+    <div class="q-pt-md">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 15px"
+        class="q-pa-md"
+      >
         <q-btn
-          style="margin: 0 5px"
           label="Voltar"
-          color="primary"
+          color="white"
+          text-color="black"
           @click="voltar"
           :disabled="isLoadingEnviar"
         />
         <q-btn
-          :label="botaoLabel"
-          color="primary"
-          @click="criarPaciente"
+          label="Salvar Alterações"
+          style="background-color: #348ab3"
+          text-color="white"
+          @click="editarPaciente"
           :disabled="isLoadingEnviar"
         />
       </div>
@@ -44,13 +61,13 @@
   <q-dialog v-model="icon">
     <q-card>
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Dados faltando.</div>
+        <div class="text-h6">Informações pendentes</div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
       <q-card-section>
-        Todo os campos precisam ser preenchidos.
+        Preencha todos os campos para prosseguir
       </q-card-section>
     </q-card>
   </q-dialog>
@@ -59,8 +76,6 @@
 <script>
 import { defineComponent } from "vue";
 import { ref } from "vue";
-import axios from "axios";
-import { url } from "src/urlApi";
 
 export default defineComponent({
   name: "editarPaciente",
@@ -79,63 +94,77 @@ export default defineComponent({
     };
   },
   mounted() {
-    this.carregarPaciente();
+    this.carregarPlano();
   },
   methods: {
     voltar() {
       this.$router.push("/pacientes");
     },
-    async carregarPaciente() {
+    async carregarPlano() {
       this.isLoading = true;
       let token = {
         headers: {
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
-      await this.$api.get('plano-saude', token).then((response) => {
+      await this.$api
+        .get("plano-saude", token)
+        .then((response) => {
+          const newData = response.data.map((value) => {
+            return {
+              id: value.id,
+              desc: value.plano_descricao,
+            };
+          });
 
-        const newData = response.data.data.map((value) => {
-          return {
-            id: value.plano_codigo,
-            desc: value.plano_descricao,
-          };
+          this.data = newData;
+        })
+        .catch((error) => {
+          console.error(error);
         });
 
-        this.data = newData;
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
-      await this.$api.get(`pacientes/${this.id}`, token).then((response) => {
-        this.nome = response.data.pac_nome;
-        this.telefone = response.data.pac_telefone;
-        this.dataNascimento = response.data.pac_dataNascimento;
-        this.plano = response.data.plano_codigo;
-        this.isLoading = false;
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      await this.$api
+        .get(`pacientes/${this.id}`, token)
+        .then((response) => {
+          this.nome = response.data.pac_nome;
+          this.telefone = response.data.pac_telefone;
+          this.dt_nascimento = response.data.pac_dt_nascimento;
+          this.plano = response.data.plano_codigo;
+          this.isLoading = false;
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     },
-    criarPaciente() {
+    editarPaciente() {
       this.isLoadingEnviar = true;
       this.botaoLabel = "Carregando ...";
-      if (this.telefone != "" && this.nome != "" && this.dataNascimento != "") {
+      if (this.telefone != "" && this.nome != "" && this.dt_nascimento != "") {
         let token = {
           headers: {
             Authorization: `Bearer ${window.localStorage.getItem("token")}`,
           },
         };
-        this.$api.put(`pacientes/${this.id}`, { pac_nome: this.nome, pac_telefone: this.telefone, pac_dataNascimento: this.dataNascimento, ...(this.plano ? { plano_saude: this.plano } : null) }, token).then((response) => {
-          this.isLoadingEnviar = false;
-          this.$router.push("/pacientes");
-        })
-        .catch((error) => {
-          this.isLoadingEnviar = false;
-          this.botaoLabel = "Criar";
-          console.error(error);
-        });
+        this.$api
+          .put(
+            `pacientes/${this.id}`,
+            {
+              pac_nome: this.nome,
+              pac_telefone: this.telefone,
+              pac_dt_nascimento: this.dt_nascimento,
+              ...(this.plano ? { plano_saude: this.plano } : null),
+            },
+            token
+          )
+          .then(() => {
+            this.isLoadingEnviar = false;
+            this.$router.push("/pacientes");
+          })
+          .catch((error) => {
+            this.isLoadingEnviar = false;
+            this.botaoLabel = "Criar";
+            console.error(error);
+          });
       } else {
         this.isLoadingEnviar = false;
         this.botaoLabel = "Criar";
@@ -147,7 +176,7 @@ export default defineComponent({
     return {
       nome: ref(""),
       telefone: ref(""),
-      dataNascimento: ref(""),
+      dt_nascimento: ref(""),
       icon: ref(false),
       plano: ref(null),
     };
